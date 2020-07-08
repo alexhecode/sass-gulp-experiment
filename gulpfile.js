@@ -1,7 +1,10 @@
+// Initialize modules
 const gulp = require("gulp");
 const shell = require("gulp-shell");
 const { series } = require("gulp");
 const inject = require("gulp-inject");
+
+// File Path Variables
 const paths = {
   src: "src/**/*",
   srcHTML: "src/**/*.html",
@@ -19,6 +22,7 @@ const paths = {
   distJS: "dist/**/*.js",
 };
 
+// Run at beginning
 function start() {
   return gulp
     .src("*.js", { read: false })
@@ -47,6 +51,16 @@ function js() {
   return gulp.src(paths.srcJS).pipe(gulp.dest(paths.tmp));
 }
 
+// Sass task
+
+// JS concat + minify
+
+// Cache-busting task ~ so we do not have to clear our cache every time we make a change
+
+// Watch task
+
+// Default task
+
 function injectIndex() {
   const css = gulp.src(paths.tmpCSS);
   const js = gulp.src(paths.tmpJS);
@@ -58,8 +72,5 @@ function injectIndex() {
 }
 
 exports.start = start;
-// exports.html = html;
-// exports.css = css;
-// exports.js = js;
 exports.copy = series(html, css, js);
 exports.inject = injectIndex;
