@@ -1,0 +1,1 @@
+{"version":3,"sources":["app.js"],"names":["console","log","one","three"],"mappings":"AAAAA,QAAAC,IAAA,eACA,IAAAC,IAAA,EACAC,MAAA","file":"app.js","sourcesContent":["console.log(\"hello world\");\nlet one = 1;\nlet three = 3;\n"]}

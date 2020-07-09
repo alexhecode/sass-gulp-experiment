@@ -9,6 +9,7 @@ const plugins = require("gulp-load-plugins")({
 // gulp plugins that do not begin with "gulp-"
 const autoprefixer = require("autoprefixer");
 const cssnano = require("cssnano");
+const browserSync = require("browser-sync").create();
 
 // File Path Variables
 const paths = {
@@ -44,17 +45,18 @@ function start() {
 }
 
 // Build dist HTML
-function html() {
+function htmlTask() {
   return src(paths.srcHTML)
     .pipe(plugins.htmlmin({ collapseWhitespace: true, removeComments: true }))
-    .pipe(dest(paths.dist));
+    .pipe(dest(paths.dist))
+    .pipe(browserSync.stream());
 }
 
-function w3cValidator() {
-  return src(paths.srcHTML)
-    .pipe(plugins.w3cjs())
-    .pipe(plugins.w3cjs.reporter());
-}
+// function w3cValidator() {
+//   return src(paths.srcHTML)
+//     .pipe(plugins.w3cjs())
+//     .pipe(plugins.w3cjs.reporter());
+// }
 
 // SCSS task
 function scssTask() {
@@ -63,8 +65,8 @@ function scssTask() {
     .pipe(plugins.sass())
     .pipe(plugins.postcss([autoprefixer(), cssnano()]))
     .pipe(plugins.sourcemaps.write("."))
-    .pipe(dest(paths.distCSS));
-  // .pipe(browserSync.stream());
+    .pipe(dest(paths.distCSS))
+    .pipe(browserSync.stream());
 }
 
 // JS task (concat + minify)
@@ -74,47 +76,65 @@ function jsTask() {
     .pipe(plugins.concat("app.js"))
     .pipe(plugins.terser())
     .pipe(plugins.sourcemaps.write("."))
-    .pipe(dest(paths.distJS));
+    .pipe(dest(paths.distJS))
+    .pipe(browserSync.stream());
 }
 
 function ImageTask() {
   return src(paths.srcImage)
     .pipe(plugins.imagemin())
-    .pipe(gulp.dest(paths.distImage));
+    .pipe(gulp.dest(paths.distImage))
+    .pipe(browserSync.stream());
 }
 
 function svgTask() {
-  return src(paths.srcSVG).pipe(plugins.svgmin()).pipe(dest(paths.distSVG));
+  return src(paths.srcSVG)
+    .pipe(plugins.svgmin())
+    .pipe(dest(paths.distSVG))
+    .pipe(browserSync.stream());
 }
 
 // Cache-busting task ~ so we do not have to clear our cache every time we make a change
-const cbString = new Date().getTime();
+// const cbString = new Date().getTime();
 
-function cacheBustTask() {
-  return src(["index.html"])
-    .pipe(replace(/cb=\d+/g, "cb=" + cbString))
-    .pipe(dest("."));
-}
+// function cacheBustTask() {
+//   return src(["index.html"])
+//     .pipe(plugins.replace(/cb=\d+/g, "cb=" + cbString))
+//     .pipe(dest("."))
+//     .pipe(browserSync.stream());
+// }
 
 // Watch task
 function watchTask() {
   watch(
     [paths.srcSCSS, paths.srcJS, paths.srcHTML],
-    parallel(scssTask, jsTask, html, w3cValidator)
+    parallel(scssTask, jsTask, htmlTask)
+    // parallel(scssTask, jsTask, htmlTask, w3cValidator)
   );
 }
 
 // Browser Sync
+function browserSyncTask() {
+  browserSync.init({
+    server: {
+      baseDir: "dist",
+    },
+  });
+  watch(paths.dist).on("change", browserSync.reload);
+}
 
 // Run at beginning of project
 exports.start = start;
 
-exports.html = html;
+exports.html = htmlTask;
 exports.style = scssTask;
 exports.script = jsTask;
 exports.image = ImageTask;
 exports.svg = svgTask;
 
-exports.watch = watchTask;
+// exports.cache = cacheBustTask;
+// exports.browser = browserSyncTask;
+exports.watch = parallel(watchTask, browserSyncTask);
 
-exports.default = series(parallel(scssTask, jsTask), cacheBustTask, watchTask);
+exports.default = series(parallel(scssTask, jsTask), watchTask);
+// exports.default = series(parallel(scssTask, jsTask), cacheBustTask, watchTask);
